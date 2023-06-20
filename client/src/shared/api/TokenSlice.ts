@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Token {
-    accessToken: string;
+    token: string;
 }
 
 interface TokenState {
@@ -17,7 +17,7 @@ export const TokenSlice = createSlice({
     initialState,
     reducers: {
         setToken: (state, action: PayloadAction<Token>) => {
-            state.accessToken = action.payload.accessToken;
+            state.accessToken = action.payload.token;
         },
         clearToken: (state) => {
             state.accessToken = null;
@@ -28,7 +28,7 @@ export const TokenSlice = createSlice({
 export const setToken = (tokens: Token) => (dispatch: AppDispatch) => {
     dispatch(TokenSlice.actions.setToken(tokens));
 
-    localStorage.setItem('accessToken', tokens.accessToken);
+    localStorage.setItem('accessToken', tokens.token);
 };
 
 export const clearToken = () => (dispatch: AppDispatch) => {

@@ -1,8 +1,8 @@
-import { commonApi } from '@/shared/api';
+import { Token, commonApi } from '@/shared/api';
 
-import { User } from '../model';
+import { Auth, User } from '../model';
 
-export const candidateApi = commonApi.injectEndpoints({
+export const userApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
         getUserInfo: builder.query<User | null, void>({
             queryFn: async (arg, api, extraOptions, baseQuery) => {
@@ -15,6 +15,22 @@ export const candidateApi = commonApi.injectEndpoints({
 
                 return { data: result.data as User };
             },
+        }),
+
+        signIn: builder.mutation<Token, Auth>({
+            query: (data) => ({
+                url: '/login',
+                method: 'POST',
+                body: data,
+            }),
+        }),
+
+        signUp: builder.mutation<Token, Auth>({
+            query: (data) => ({
+                url: '/signup',
+                method: 'POST',
+                body: data,
+            }),
         }),
     }),
 });

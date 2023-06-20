@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Flex, Loader } from '@mantine/core';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-import { candidateApi } from '@/entities/User';
+import { userApi } from '@/entities/User';
 
 import { HOME_PATH } from '@/pages';
 
@@ -12,7 +12,7 @@ interface AuthRouteProps {
 }
 
 const AuthRoute: FC<AuthRouteProps> = ({ redirectTo, reverseProtection }) => {
-    const { data, isLoading } = candidateApi.useGetUserInfoQuery();
+    const { data, isLoading } = userApi.useGetUserInfoQuery();
     const location = useLocation();
 
     if (isLoading) {
