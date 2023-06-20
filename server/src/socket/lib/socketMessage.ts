@@ -2,7 +2,8 @@ import { Message } from '../schemas/message.js';
 
 interface SocketMessageMap {
     auth: string;
-    message: string;
+    sendMessage: string;
+    recieveMessage: WithId<Message>;
     error: string;
     history: WithId<Message>[];
 }

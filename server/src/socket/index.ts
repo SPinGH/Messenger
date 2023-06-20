@@ -36,14 +36,21 @@ const socket: FastifyPluginAsyncJsonSchemaToTs = fp(async (fastify, opts) => {
                 }
             } else if (currentUser !== null) {
                 switch (type) {
-                    case 'message':
-                        const text = `${currentUser.username}: ${data}`;
-                        await messageCollection.insertOne({
+                    case 'sendMessage':
+                        const message = {
                             author: currentUser._id.toHexString(),
                             date: new Date().toISOString(),
-                            text,
-                        });
-                        activeUsers.forEach((user) => user.send(socketMessage('message', text)));
+                            text: `${currentUser.username}: ${data}`,
+                        };
+                        const { insertedId } = await messageCollection.insertOne(message);
+                        activeUsers.forEach((user) =>
+                            user.send(
+                                socketMessage('recieveMessage', {
+                                    _id: insertedId,
+                                    ...message,
+                                })
+                            )
+                        );
                         break;
 
                     default:
