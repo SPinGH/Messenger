@@ -5,6 +5,7 @@ import AuthRoute from '@/features/AuthRoute';
 
 const SignInPage = lazy(() => import('./SignInPage'));
 const SignUpPage = lazy(() => import('./SignUpPage'));
+const ChatPage = lazy(() => import('./ChatPage'));
 
 export const HOME_PATH = '/';
 export const SIGNIN_PATH = '/signin';
@@ -16,8 +17,8 @@ export const routes: RouteObject[] = [
         element: <AuthRoute redirectTo={SIGNIN_PATH} />,
         children: [
             {
-                path: HOME_PATH,
-                element: <div>Home</div>,
+                path: HOME_PATH + ':id?',
+                element: <ChatPage />,
             },
         ],
     },
