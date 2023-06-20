@@ -4,6 +4,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { authSchema } from './schemas/auth.js';
 import { hashPassword } from './lib/hashPassword.js';
 import { User } from './schemas/user.js';
+import { getUserSchema } from './schemas/getUser.js';
 
 const user: FastifyPluginAsyncJsonSchemaToTs = fp(async (fastify, opts) => {
     const userCollection = fastify.mongo.db!.collection<User>('user');
@@ -44,6 +45,21 @@ const user: FastifyPluginAsyncJsonSchemaToTs = fp(async (fastify, opts) => {
         reply.code(400);
         throw new Error('Invalid username or password');
     });
+
+    fastify.get(
+        '/user',
+        { schema: { security: [{ Bearer: [] }], ...getUserSchema }, onRequest: [fastify.authenticate] },
+        async (request, reply) => {
+            const candidate = await userCollection.findOne({ _id: new fastify.mongo.ObjectId(request.user.id) });
+
+            if (!candidate) {
+                reply.code(404);
+                throw new Error('User not found');
+            }
+
+            return candidate;
+        }
+    );
 });
 
 export default user;

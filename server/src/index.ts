@@ -8,12 +8,14 @@ import socket from './plugins/socket.js';
 
 import userModule from './user/index.js';
 import socketModule from './socket/index.js';
+import cors from './plugins/cors.js';
 
 const fastify = Fastify({
     logger: true,
 });
 
 await fastify.register(env);
+fastify.register(cors);
 fastify.register(database);
 fastify.register(socket);
 fastify.register(authenticate);

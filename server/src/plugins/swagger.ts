@@ -9,6 +9,14 @@ const swagger = fp(async (fastify, opts) => {
                 title: 'Messenger swagger',
                 version: '0.1.0',
             },
+            securityDefinitions: {
+                Bearer: {
+                    type: 'apiKey',
+                    name: 'Authorization',
+                    in: 'header',
+                    description: 'Enter the token with the "Bearer: " prefix, e.g. "Bearer abcde12345"',
+                },
+            },
         },
     });
 

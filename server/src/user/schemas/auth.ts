@@ -1,5 +1,3 @@
-import {} from 'fastify';
-
 export const authSchema = {
     body: {
         type: 'object',
