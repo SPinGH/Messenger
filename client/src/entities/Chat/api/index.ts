@@ -1,6 +1,7 @@
 import { commonApi } from '@/shared/api';
 import { Group, Message, MessageRequest } from '..';
 import { parseSocketMessage, socketMessage } from '../lib/socketMessage';
+import { group } from 'console';
 
 let socket: WebSocket;
 
@@ -95,6 +96,49 @@ export const chatApi = commonApi.injectEndpoints({
                 );
 
                 return { data: resultData };
+            },
+        }),
+
+        deleteGroup: builder.mutation<void, Pick<Group, '_id'>>({
+            query: ({ _id }) => ({
+                url: `/group/${_id}`,
+                method: 'DELETE',
+            }),
+            onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+                try {
+                    await queryFulfilled;
+
+                    dispatch(
+                        chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                            return draft.filter((group) => group._id !== arg._id);
+                        })
+                    );
+                } catch (e) {}
+            },
+        }),
+
+        updateGroup: builder.mutation<void, Group>({
+            queryFn: async (arg, api, extraOptions, baseQuery) => {
+                const result = await baseQuery({
+                    url: `/group/${arg._id}`,
+                    method: 'PUT',
+                    body: {
+                        ...arg,
+                        users: arg.users.map((user) => user._id),
+                    },
+                });
+                if (result.error) return { error: result.error };
+
+                api.dispatch(
+                    chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                        const group = draft.find((group) => group._id === arg._id);
+                        if (group) {
+                            (group.name = arg.name), (group.users = arg.users);
+                        }
+                    })
+                );
+
+                return { data: result.data as void };
             },
         }),
     }),
