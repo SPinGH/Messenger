@@ -5,10 +5,11 @@ import database from './plugins/database.js';
 import swagger from './plugins/swagger.js';
 import env from './plugins/env.js';
 import socket from './plugins/socket.js';
+import cors from './plugins/cors.js';
 
 import userModule from './user/index.js';
 import socketModule from './socket/index.js';
-import cors from './plugins/cors.js';
+import groupModule from './group/index.js';
 
 const fastify = Fastify({
     logger: true,
@@ -24,6 +25,7 @@ fastify.register(swagger);
 fastify.register(
     async (instance) => {
         instance.register(userModule);
+        instance.register(groupModule);
         instance.register(socketModule);
     },
     { prefix: '/api' }
