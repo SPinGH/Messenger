@@ -1,3 +1,3 @@
-import AuthRoute from './components/AuthRoute';
+import AuthRoute from './ui/AuthRoute';
 
 export default AuthRoute;

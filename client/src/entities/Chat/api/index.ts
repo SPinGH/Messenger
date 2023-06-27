@@ -1,5 +1,5 @@
 import { commonApi } from '@/shared/api';
-import { Message } from '..';
+import { Group, Message, MessageRequest } from '..';
 import { parseSocketMessage, socketMessage } from '../lib/socketMessage';
 
 let socket: WebSocket;
@@ -13,9 +13,9 @@ const getSocket = () => {
 
 export const chatApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
-        getMessages: builder.query<Message[], void>({
-            queryFn: () => ({ data: [] }),
-            async onCacheEntryAdded(_, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState }) {
+        getGroups: builder.query<Group[], void>({
+            query: () => '/group',
+            async onCacheEntryAdded(_, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState, dispatch }) {
                 const ws = getSocket();
 
                 try {
@@ -23,21 +23,30 @@ export const chatApi = commonApi.injectEndpoints({
 
                     const state = getState() as RootState;
 
-                    ws.onopen = () => {
-                        ws.send(socketMessage('auth', `Bearer ${state.token.accessToken}`));
-                    };
+                    ws.send(socketMessage('auth', `Bearer ${state.token.accessToken}`));
 
                     ws.onmessage = (event: MessageEvent) => {
                         const { type, data } = parseSocketMessage(event.data);
                         switch (type) {
-                            case 'history':
-                                updateCachedData(() => data);
-                                break;
-                            case 'recieveMessage':
+                            case 'recieveMessage': {
                                 updateCachedData((draft) => {
-                                    draft.push(data);
+                                    const groupIndex = draft.findIndex((g) => g._id === data.group);
+                                    if (groupIndex !== -1) {
+                                        const group = draft[groupIndex];
+                                        group.lastMessage = data;
+                                        if (groupIndex !== 0) {
+                                            draft.splice(groupIndex, 1);
+                                            draft.unshift(group);
+                                        }
+                                    }
                                 });
+                                dispatch(
+                                    chatApi.util.updateQueryData('getMessages', data.group, (draft) => {
+                                        draft.push(data);
+                                    })
+                                );
                                 break;
+                            }
                             default:
                                 break;
                         }
@@ -50,13 +59,42 @@ export const chatApi = commonApi.injectEndpoints({
             },
         }),
 
-        sendMessage: builder.mutation<void, string>({
-            queryFn: (text) => {
+        getMessages: builder.query<Message[], string>({
+            query: (id) => `/group/${id}`,
+        }),
+
+        sendMessage: builder.mutation<void, MessageRequest>({
+            queryFn: (data) => {
                 const socket = getSocket();
                 return new Promise((resolve) => {
-                    socket.send(socketMessage('sendMessage', text));
+                    socket.send(socketMessage('sendMessage', data));
                     resolve({ data: undefined });
                 });
+            },
+        }),
+
+        createGroup: builder.mutation<Pick<Group, '_id'>, WithOptional<Group, '_id'>>({
+            queryFn: async (arg, api, extraOptions, baseQuery) => {
+                const result = await baseQuery({
+                    url: '/group',
+                    method: 'POST',
+                    body: {
+                        ...arg,
+                        name: arg.isDialog ? '' : arg.name,
+                        users: arg.users.map((user) => user._id),
+                    },
+                });
+                if (result.error) return { error: result.error };
+
+                const resultData = result.data as Pick<Group, '_id'>;
+
+                api.dispatch(
+                    chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                        draft.unshift({ _id: resultData._id, ...arg });
+                    })
+                );
+
+                return { data: resultData };
             },
         }),
     }),

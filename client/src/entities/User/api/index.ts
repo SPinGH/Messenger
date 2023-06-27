@@ -1,6 +1,6 @@
 import { Token, commonApi } from '@/shared/api';
 
-import { Auth, User } from '../model';
+import { Auth, ChangePassword, User } from '../model';
 
 export const userApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -17,6 +17,14 @@ export const userApi = commonApi.injectEndpoints({
             },
         }),
 
+        getUser: builder.query<User, string>({
+            query: (id) => ({ url: `/user/${id}` }),
+        }),
+
+        getUsers: builder.query<User[], Pick<User, 'username'>>({
+            query: (params) => ({ url: '/users', params }),
+        }),
+
         signIn: builder.mutation<Token, Auth>({
             query: (data) => ({
                 url: '/login',
@@ -29,6 +37,33 @@ export const userApi = commonApi.injectEndpoints({
             query: (data) => ({
                 url: '/signup',
                 method: 'POST',
+                body: data,
+            }),
+        }),
+
+        updateUser: builder.mutation<void, Pick<User, 'username'>>({
+            query: (data) => ({
+                url: '/user',
+                method: 'PUT',
+                body: data,
+            }),
+            onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+                try {
+                    await queryFulfilled;
+
+                    dispatch(
+                        userApi.util.updateQueryData('getUserInfo', undefined, (user) => {
+                            if (user) user.username = arg.username;
+                        })
+                    );
+                } catch (e) {}
+            },
+        }),
+
+        changePassword: builder.mutation<void, ChangePassword>({
+            query: (data) => ({
+                url: '/user/password',
+                method: 'PUT',
                 body: data,
             }),
         }),

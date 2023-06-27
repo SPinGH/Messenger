@@ -1,0 +1,7 @@
+.root {
+    text-decoration: none;
+    color: inherit;
+}
+:where(.wrapper:hover) {
+    background-color: #cccccc4d;
+}

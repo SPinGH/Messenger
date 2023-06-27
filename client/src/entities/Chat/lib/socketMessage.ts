@@ -1,11 +1,10 @@
-import { Message } from '..';
+import { Message, MessageRequest } from '..';
 
 interface SocketMessageMap {
     auth: string;
-    sendMessage: string;
+    sendMessage: MessageRequest;
     recieveMessage: Message;
     error: string;
-    history: Message[];
 }
 
 type SocketMessage = {

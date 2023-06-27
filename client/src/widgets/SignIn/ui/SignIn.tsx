@@ -1,4 +1,4 @@
-import { Alert, Anchor, Box, Button, Collapse, Flex, Paper, PasswordInput, TextInput } from '@mantine/core';
+import { Alert, Box, Button, Collapse, Flex, Paper, PasswordInput, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { FC } from 'react';
 
@@ -35,12 +35,6 @@ const SignIn: FC = () => {
                     <TextInput label='Username' placeholder='username' required {...form.getInputProps('username')} />
 
                     <PasswordInput label='Password' placeholder='••••••' required {...form.getInputProps('password')} />
-
-                    <Flex justify='flex-end'>
-                        <Anchor disabled component='button' size='sm'>
-                            Forgot password?
-                        </Anchor>
-                    </Flex>
 
                     <Box>
                         <Button type='submit' fullWidth loading={isLoading}>
