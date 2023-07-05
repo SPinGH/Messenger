@@ -62,10 +62,14 @@ const GroupItem: FC<GroupItemProps> = ({ group, active }) => {
                         </Text>
                         {group.lastMessage && <Text>{getLastMessageTime(group.lastMessage.date)}</Text>}
                     </Flex>
-                    <Text component='span' c={!active ? 'blue' : undefined}>
-                        {username}:
-                    </Text>
-                    {' ' + group.lastMessage?.text}
+                    {group.lastMessage && (
+                        <>
+                            <Text component='span' c={!active ? 'blue' : undefined}>
+                                {username}:
+                            </Text>
+                            {' ' + group.lastMessage?.text}
+                        </>
+                    )}
                 </Box>
             </Flex>
         </Link>

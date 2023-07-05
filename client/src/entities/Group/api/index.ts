@@ -71,6 +71,44 @@ export const groupApi = commonApi.injectEndpoints({
                                 );
                                 break;
                             }
+                            case 'createGroup': {
+                                dispatch(
+                                    groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                                        draft.unshift(data);
+                                    })
+                                );
+                                break;
+                            }
+                            case 'updateGroup': {
+                                dispatch(
+                                    groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                                        return draft.map((group) => {
+                                            if (group._id === data._id) return { ...group, ...data };
+                                            return group;
+                                        });
+                                    })
+                                );
+                                break;
+                            }
+                            case 'deleteGroup': {
+                                dispatch(
+                                    groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                                        return draft.filter((group) => group._id !== data._id);
+                                    })
+                                );
+                                break;
+                            }
+                            case 'updateUser': {
+                                dispatch(
+                                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                                        const user = draft?.users[data._id];
+                                        if (user) {
+                                            draft.users[user._id] = { ...user, ...data };
+                                        }
+                                    })
+                                );
+                                break;
+                            }
                             default:
                                 break;
                         }

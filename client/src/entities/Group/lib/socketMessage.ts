@@ -1,12 +1,21 @@
-import { Message, MessageRequest } from '..';
+import { Group, Message, MessageRequest } from '..';
+import { User } from '@/entities/User';
 
 interface SocketMessageMap {
     auth: { token: string };
+    error: { message: string };
+
     online: { _id: string };
     offline: { _id: string; lastSeen: string };
+
     sendMessage: MessageRequest;
     recieveMessage: Message;
-    error: { message: string };
+
+    createGroup: Group;
+    updateGroup: WithRequired<Partial<Group>, '_id'>;
+    deleteGroup: { _id: string };
+
+    updateUser: WithRequired<Partial<User>, '_id'>;
 }
 
 type SocketMessage = {
