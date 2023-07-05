@@ -1,13 +1,13 @@
 import { Avatar, Flex, Indicator, Text } from '@mantine/core';
+import { IconCheck } from '@tabler/icons-react';
 import { FC, HTMLAttributes } from 'react';
 
-import { IconCheck } from '@tabler/icons-react';
-import { Group } from '..';
+import { Group, GroupRequest } from '..';
 
 interface GroupCardProps extends HTMLAttributes<HTMLDivElement> {
     className?: string;
     selected?: boolean;
-    group: WithOptional<Group, '_id'>;
+    group: WithOptional<Group, '_id'> | GroupRequest;
 }
 
 const GroupCard: FC<GroupCardProps> = ({ className, group, selected, ...props }) => {

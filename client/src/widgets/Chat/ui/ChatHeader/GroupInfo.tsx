@@ -1,22 +1,26 @@
-import { Group, GroupCard, chatApi } from '@/entities/Chat';
+import { ActionIcon, Avatar, Badge, Box, Button, Flex, Text, TextInput } from '@mantine/core';
+import { ChangeEvent, FC, useState } from 'react';
+import { IconX } from '@tabler/icons-react';
+
+import { Group, GroupCard, groupApi } from '@/entities/Group';
 import { User, UserCard, userApi } from '@/entities/User';
 import SearchUser from '@/features/SearchUser';
-import { ActionIcon, Avatar, Badge, Box, Button, Flex, Text, TextInput } from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
-import { ChangeEvent, FC, useState } from 'react';
 
 interface GroupInfoProps {
-    group: WithOptional<Group, '_id'>;
+    group: Group;
 }
 
 const GroupInfo: FC<GroupInfoProps> = ({ group }) => {
-    const { data: currentUser } = userApi.useGetUserInfoQuery();
-    const [updateGroup, { isLoading }] = chatApi.useUpdateGroupMutation();
+    const { data: userInfo } = userApi.useGetUserInfoQuery();
+    const [updateGroup, { isLoading }] = groupApi.useUpdateGroupMutation();
     const [name, setName] = useState(group.name);
-    const [members, setMembers] = useState<User[]>(() => group.users.filter((user) => user._id !== currentUser?._id));
+    const [members, setMembers] = useState<User[]>(() => {
+        const users = group.users.filter((id) => id !== userInfo?.user._id);
+        return users.map((id) => userInfo?.users[id] as User);
+    });
 
     if (group.isDialog) {
-        const user = members.length === 0 ? currentUser! : members[0];
+        const user = members.length === 0 ? userInfo!.user : members[0];
         return (
             <Flex>
                 <UserCard user={user} />
@@ -32,7 +36,7 @@ const GroupInfo: FC<GroupInfoProps> = ({ group }) => {
     };
 
     const onSaveClick = () =>
-        updateGroup({ _id: group._id!, name, isDialog: false, users: [...members, currentUser!] });
+        updateGroup({ _id: group._id!, name, isDialog: false, users: [...members, userInfo!.user] });
 
     return (
         <Flex direction='column' gap='xs'>
@@ -55,10 +59,10 @@ const GroupInfo: FC<GroupInfoProps> = ({ group }) => {
                         radius='xl'
                         leftSection={
                             <Avatar size='sm' color='blue' radius='xl'>
-                                {currentUser?.username[0].toUpperCase()}
+                                {userInfo?.user.username[0].toUpperCase()}
                             </Avatar>
                         }>
-                        {currentUser?.username}
+                        {userInfo?.user.username}
                     </Badge>
                     {members.map((member) => {
                         const onClick = () => setMembers((prev) => prev.filter((user) => user !== member));

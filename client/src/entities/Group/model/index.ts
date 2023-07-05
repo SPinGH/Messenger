@@ -3,8 +3,15 @@ import { User } from '@/entities/User';
 export interface Group {
     _id: string;
     name: string;
-    users: User[];
+    users: string[];
     lastMessage?: Message;
+    isDialog: boolean;
+}
+
+export interface GroupRequest {
+    _id?: string;
+    name: string;
+    users: User[];
     isDialog: boolean;
 }
 

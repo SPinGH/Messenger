@@ -1,10 +1,12 @@
 import { Message, MessageRequest } from '..';
 
 interface SocketMessageMap {
-    auth: string;
+    auth: { token: string };
+    online: { _id: string };
+    offline: { _id: string; lastSeen: string };
     sendMessage: MessageRequest;
     recieveMessage: Message;
-    error: string;
+    error: { message: string };
 }
 
 type SocketMessage = {

@@ -6,28 +6,30 @@ import { useNavigate } from 'react-router-dom';
 
 import { User, userApi } from '@/entities/User';
 import SearchUser from '@/features/SearchUser';
-import { chatApi } from '@/entities/Chat';
+import { groupApi } from '@/entities/Group';
 import { HOME_PATH } from '@/pages';
 
 const NewGroupButton: FC = () => {
-    const { data: curentUser } = userApi.useGetUserInfoQuery();
-    const [createGroup, { isLoading: createIsLoading }] = chatApi.useCreateGroupMutation();
+    const { data: userInfo } = userApi.useGetUserInfoQuery();
+    const [createGroup, { isLoading: createIsLoading }] = groupApi.useCreateGroupMutation();
     const navigate = useNavigate();
 
     const [opened, { open, close }] = useDisclosure(false);
 
     const [name, setName] = useState('');
-    const [members, setMembers] = useState<User[]>([]);
-
     const onNameChange = (event: ChangeEvent<HTMLInputElement>) => setName(event.currentTarget.value);
-    const onUserClick = (user: User) => {
+
+    const [members, setMembers] = useState<User[]>([]);
+    const deleteMember = (member: User) => () => setMembers((prev) => prev.filter((user) => user !== member));
+    const toggleUser = (user: User) => {
         const candidate = members.find((u) => u._id === user._id);
         if (candidate) setMembers(members.filter((user) => user !== candidate));
         else setMembers([...members, user]);
     };
 
     const onCreateClick = () => {
-        createGroup({ name, isDialog: false, users: [...members, curentUser!] })
+        if (!userInfo) return;
+        createGroup({ name, isDialog: false, users: [...members, userInfo.user] })
             .unwrap()
             .then(({ _id }) => {
                 close();
@@ -49,35 +51,37 @@ const NewGroupButton: FC = () => {
                             radius='xl'
                             leftSection={
                                 <Avatar size='sm' color='blue' radius='xl'>
-                                    {curentUser?.username[0].toUpperCase()}
+                                    {userInfo?.user.username[0].toUpperCase()}
                                 </Avatar>
                             }>
-                            {curentUser?.username}
+                            {userInfo?.user.username}
                         </Badge>
-                        {members.map((member) => {
-                            const onClick = () => setMembers((prev) => prev.filter((user) => user !== member));
-                            return (
-                                <Badge
-                                    key={member._id}
-                                    pl={0}
-                                    size='lg'
-                                    radius='xl'
-                                    leftSection={
-                                        <Avatar size='sm' color='blue' radius='xl'>
-                                            {member.username[0].toUpperCase()}
-                                        </Avatar>
-                                    }
-                                    rightSection={
-                                        <ActionIcon size='xs' radius='xl' variant='transparent' onClick={onClick}>
-                                            <IconX size='0.8rem' />
-                                        </ActionIcon>
-                                    }>
-                                    {member.username}
-                                </Badge>
-                            );
-                        })}
+                        {members.map((member) => (
+                            <Badge
+                                key={member._id}
+                                pl={0}
+                                size='lg'
+                                radius='xl'
+                                leftSection={
+                                    <Avatar size='sm' color='blue' radius='xl'>
+                                        {member.username[0].toUpperCase()}
+                                    </Avatar>
+                                }
+                                rightSection={
+                                    <ActionIcon
+                                        size='xs'
+                                        radius='xl'
+                                        variant='transparent'
+                                        onClick={deleteMember(member)}>
+                                        <IconX size='0.8rem' />
+                                    </ActionIcon>
+                                }>
+                                {member.username}
+                            </Badge>
+                        ))}
                     </Flex>
-                    <SearchUser onClick={onUserClick} selected={members} />
+                    <SearchUser onClick={toggleUser} selected={members} />
+
                     <Flex gap='xs' justify='flex-end'>
                         <Button variant='default' onClick={close}>
                             Cancel

@@ -1,6 +1,18 @@
 export interface User {
     _id: string;
     username: string;
+    isOnline: boolean;
+    lastSeen: string;
+}
+
+export interface RawUserInfo {
+    user: User;
+    users: User[];
+}
+
+export interface UserInfo {
+    user: User;
+    users: Record<string, User>;
 }
 
 export interface Auth {

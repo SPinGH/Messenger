@@ -2,14 +2,14 @@ import { Flex, useMantineColorScheme } from '@mantine/core';
 import { useParams } from 'react-router-dom';
 import { FC } from 'react';
 
-import { chatApi } from '@/entities/Chat';
+import { groupApi } from '@/entities/Group';
 import ChatForm from './ChatForm';
 import ChatHeader from './ChatHeader';
 import ChatBody from './ChatBody';
 
 const Chat: FC = () => {
     const { id } = useParams();
-    const { data: groups } = chatApi.useGetGroupsQuery();
+    const { data: groups } = groupApi.useGetGroupsQuery();
 
     const { colorScheme } = useMantineColorScheme();
     const bgColor = colorScheme === 'dark' ? 'dark.9' : 'blue.0';
@@ -26,7 +26,7 @@ const Chat: FC = () => {
     return (
         <Flex h='100%' direction='column'>
             <ChatHeader group={group} />
-            <ChatBody key={id} group={group} bg={bgColor} />
+            <ChatBody key={id} groupId={group._id} bg={bgColor} />
             <ChatForm group={group} />
         </Flex>
     );

@@ -6,7 +6,7 @@ import { userApi } from '@/entities/User';
 const UsernameForm: FC = () => {
     const { data } = userApi.useGetUserInfoQuery();
     const [updateUser, { isLoading }] = userApi.useUpdateUserMutation();
-    const [username, setUsername] = useState(data?.username ?? '');
+    const [username, setUsername] = useState(data?.user.username ?? '');
 
     const onChange = (event: ChangeEvent<HTMLInputElement>) => setUsername(event.currentTarget.value);
 
@@ -19,10 +19,10 @@ const UsernameForm: FC = () => {
         <form onSubmit={onSubmit}>
             <Flex gap='xs' align='flex-end'>
                 <TextInput
-                    label='Username'
-                    placeholder='username'
                     w='100%'
                     required
+                    label='Username'
+                    placeholder='username'
                     value={username}
                     onChange={onChange}
                 />

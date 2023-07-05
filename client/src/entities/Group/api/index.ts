@@ -1,7 +1,7 @@
 import { commonApi } from '@/shared/api';
-import { Group, Message, MessageRequest } from '..';
+import { Group, GroupRequest, Message, MessageRequest } from '..';
 import { parseSocketMessage, socketMessage } from '../lib/socketMessage';
-import { group } from 'console';
+import { userApi } from '@/entities/User';
 
 let socket: WebSocket;
 
@@ -12,7 +12,7 @@ const getSocket = () => {
     return socket;
 };
 
-export const chatApi = commonApi.injectEndpoints({
+export const groupApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
         getGroups: builder.query<Group[], void>({
             query: () => '/group',
@@ -24,7 +24,7 @@ export const chatApi = commonApi.injectEndpoints({
 
                     const state = getState() as RootState;
 
-                    ws.send(socketMessage('auth', `Bearer ${state.token.accessToken}`));
+                    ws.send(socketMessage('auth', { token: `Bearer ${state.token.accessToken}` }));
 
                     ws.onmessage = (event: MessageEvent) => {
                         const { type, data } = parseSocketMessage(event.data);
@@ -42,8 +42,31 @@ export const chatApi = commonApi.injectEndpoints({
                                     }
                                 });
                                 dispatch(
-                                    chatApi.util.updateQueryData('getMessages', data.group, (draft) => {
+                                    groupApi.util.updateQueryData('getMessages', data.group, (draft) => {
                                         draft.push(data);
+                                    })
+                                );
+                                break;
+                            }
+                            case 'online': {
+                                dispatch(
+                                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                                        const user = draft?.users[data._id];
+                                        if (user) {
+                                            user.isOnline = true;
+                                        }
+                                    })
+                                );
+                                break;
+                            }
+                            case 'offline': {
+                                dispatch(
+                                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                                        const user = draft?.users[data._id];
+                                        if (user) {
+                                            user.isOnline = false;
+                                            user.lastSeen = data.lastSeen;
+                                        }
                                     })
                                 );
                                 break;
@@ -74,24 +97,30 @@ export const chatApi = commonApi.injectEndpoints({
             },
         }),
 
-        createGroup: builder.mutation<Pick<Group, '_id'>, WithOptional<Group, '_id'>>({
-            queryFn: async (arg, api, extraOptions, baseQuery) => {
+        createGroup: builder.mutation<Pick<Group, '_id'>, GroupRequest>({
+            queryFn: async (arg, api, _extraOptions, baseQuery) => {
+                const users = arg.users.map((user) => user._id);
                 const result = await baseQuery({
                     url: '/group',
                     method: 'POST',
-                    body: {
-                        ...arg,
-                        name: arg.isDialog ? '' : arg.name,
-                        users: arg.users.map((user) => user._id),
-                    },
+                    body: { ...arg, users },
                 });
                 if (result.error) return { error: result.error };
 
                 const resultData = result.data as Pick<Group, '_id'>;
 
                 api.dispatch(
-                    chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
-                        draft.unshift({ _id: resultData._id, ...arg });
+                    groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                        draft.unshift({ _id: resultData._id, ...arg, users });
+                    })
+                );
+                api.dispatch(
+                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                        if (draft) {
+                            arg.users.forEach((user) => {
+                                if (!draft.users[user._id]) draft.users[user._id] = user;
+                            });
+                        }
                     })
                 );
 
@@ -109,7 +138,7 @@ export const chatApi = commonApi.injectEndpoints({
                     await queryFulfilled;
 
                     dispatch(
-                        chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                        groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
                             return draft.filter((group) => group._id !== arg._id);
                         })
                     );
@@ -117,23 +146,34 @@ export const chatApi = commonApi.injectEndpoints({
             },
         }),
 
-        updateGroup: builder.mutation<void, Group>({
-            queryFn: async (arg, api, extraOptions, baseQuery) => {
+        updateGroup: builder.mutation<void, GroupRequest>({
+            queryFn: async (arg, api, _extraOptions, baseQuery) => {
+                const users = arg.users.map((user) => user._id);
                 const result = await baseQuery({
                     url: `/group/${arg._id}`,
                     method: 'PUT',
                     body: {
                         ...arg,
-                        users: arg.users.map((user) => user._id),
+                        users,
                     },
                 });
                 if (result.error) return { error: result.error };
 
                 api.dispatch(
-                    chatApi.util.updateQueryData('getGroups', undefined, (draft) => {
+                    groupApi.util.updateQueryData('getGroups', undefined, (draft) => {
                         const group = draft.find((group) => group._id === arg._id);
                         if (group) {
-                            (group.name = arg.name), (group.users = arg.users);
+                            group.name = arg.name;
+                            group.users = users;
+                        }
+                    })
+                );
+                api.dispatch(
+                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                        if (draft) {
+                            arg.users.forEach((user) => {
+                                if (!draft.users[user._id]) draft.users[user._id] = user;
+                            });
                         }
                     })
                 );

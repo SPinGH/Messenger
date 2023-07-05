@@ -1,36 +1,48 @@
-import { Box, Flex, Modal, Text, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { Modal } from '@mantine/core';
 import { FC } from 'react';
 
-import { Group } from '@/entities/Chat';
+import { getLastMessageTime } from '@/shared/lib/getLastMessageTime';
+import { Group, GroupHeader } from '@/entities/Group';
+import { userApi } from '@/entities/User';
 import GroupMenu from './GroupMenu';
 import GroupInfo from './GroupInfo';
 
 interface ChatHeaderProps {
-    group: WithOptional<Group, '_id'>;
+    group: Group;
 }
 
 const ChatHeader: FC<ChatHeaderProps> = ({ group }) => {
+    const { data: userInfo } = userApi.useGetUserInfoQuery();
     const [opened, { open, close }] = useDisclosure(false);
 
-    return (
-        <Flex h='65px' align='center' justify='space-between' py='xs' px='md'>
-            <UnstyledButton onClick={open}>
-                <Text fw='500' size='sm' truncate lh='18px'>
-                    {group.name}
-                </Text>
-                {group.users.length > 1 && (
-                    <Text size='sm' c='gray.5' lh='18px'>
-                        {group.users.length} members
-                    </Text>
-                )}
-            </UnstyledButton>
-            {group._id && <GroupMenu group={group as Group} openInfo={open} />}
+    let name = 'Saved messages';
+    let info = '';
 
-            <Modal opened={opened} onClose={close} title={group.isDialog ? 'User info' : 'Group info'}>
-                <GroupInfo group={group} />
-            </Modal>
-        </Flex>
+    if (group.isDialog && group.users.length === 2) {
+        const user = userInfo?.users[group.users.find((id) => id !== userInfo?.user._id) ?? ''];
+        name = user?.username ?? group.name;
+        info = user?.isOnline ? 'online' : `last seen in ${getLastMessageTime(user?.lastSeen ?? '')}`;
+    } else if (!group.isDialog) {
+        name = group.name;
+        info = `${group.users.length} members`;
+    }
+
+    return (
+        <GroupHeader
+            title={name}
+            subtitle={info}
+            onClick={open}
+            rightSection={
+                <>
+                    <GroupMenu group={group} openInfo={open} />
+
+                    <Modal opened={opened} onClose={close} title={group.isDialog ? 'User info' : 'Group info'}>
+                        <GroupInfo group={group} />
+                    </Modal>
+                </>
+            }
+        />
     );
 };
 

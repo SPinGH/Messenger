@@ -7,8 +7,8 @@ const SignInPage = lazy(() => import('./SignInPage'));
 const SignUpPage = lazy(() => import('./SignUpPage'));
 
 const ChatPage = lazy(() => import('./ChatPage'));
-const Chat = lazy(() => import('@/widgets/Chat/ui/Chat'));
-const NewChat = lazy(() => import('@/widgets/Chat/ui/NewChat'));
+const Chat = lazy(() => import('@/widgets/Chat'));
+const NewChat = lazy(() => import('@/widgets/NewChat'));
 
 export const HOME_PATH = '/';
 export const SIGNIN_PATH = '/signin';

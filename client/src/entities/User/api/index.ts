@@ -1,11 +1,11 @@
 import { Token, commonApi } from '@/shared/api';
 
-import { Auth, ChangePassword, User } from '../model';
+import { Auth, ChangePassword, RawUserInfo, User, UserInfo } from '../model';
 
 export const userApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
-        getUserInfo: builder.query<User | null, void>({
-            queryFn: async (arg, api, extraOptions, baseQuery) => {
+        getUserInfo: builder.query<UserInfo | null, void>({
+            queryFn: async (_arg, api, _extraOptions, baseQuery) => {
                 const state = api.getState() as RootState;
 
                 if (!state.token.accessToken) return { data: null };
@@ -13,7 +13,16 @@ export const userApi = commonApi.injectEndpoints({
                 const result = await baseQuery('/user');
                 if (result.error) return { error: result.error };
 
-                return { data: result.data as User };
+                const resultData = result.data as RawUserInfo;
+                const data = {
+                    user: resultData.user,
+                    users: resultData.users.reduce((acc, user) => {
+                        acc[user._id] = user;
+                        return acc;
+                    }, {} as UserInfo['users']),
+                };
+
+                return { data };
             },
         }),
 
@@ -22,12 +31,12 @@ export const userApi = commonApi.injectEndpoints({
         }),
 
         getUsers: builder.query<User[], Pick<User, 'username'>>({
-            query: (params) => ({ url: '/users', params }),
+            query: (params) => ({ url: '/user/all', params }),
         }),
 
         signIn: builder.mutation<Token, Auth>({
             query: (data) => ({
-                url: '/login',
+                url: '/user/signin',
                 method: 'POST',
                 body: data,
             }),
@@ -35,7 +44,7 @@ export const userApi = commonApi.injectEndpoints({
 
         signUp: builder.mutation<Token, Auth>({
             query: (data) => ({
-                url: '/signup',
+                url: '/user/signup',
                 method: 'POST',
                 body: data,
             }),
@@ -53,7 +62,7 @@ export const userApi = commonApi.injectEndpoints({
 
                     dispatch(
                         userApi.util.updateQueryData('getUserInfo', undefined, (user) => {
-                            if (user) user.username = arg.username;
+                            if (user) user.user.username = arg.username;
                         })
                     );
                 } catch (e) {}

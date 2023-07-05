@@ -1,10 +1,11 @@
-import { Group, chatApi } from '@/entities/Chat';
-import { HOME_PATH } from '@/pages';
-import { ActionIcon, Button, Flex, Menu, Modal, Text } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
 import { IconDotsVertical, IconInfoCircle, IconTrash, IconUserCircle } from '@tabler/icons-react';
-import { FC } from 'react';
+import { ActionIcon, Button, Flex, Menu, Modal, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import { useDisclosure } from '@mantine/hooks';
+import { FC } from 'react';
+
+import { Group, groupApi } from '@/entities/Group';
+import { HOME_PATH } from '@/pages';
 
 interface GroupMenuProps {
     group: Group;
@@ -12,7 +13,7 @@ interface GroupMenuProps {
 }
 
 const GroupMenu: FC<GroupMenuProps> = ({ group, openInfo }) => {
-    const [deleteGroup, { isLoading }] = chatApi.useDeleteGroupMutation();
+    const [deleteGroup, { isLoading }] = groupApi.useDeleteGroupMutation();
     const [opened, { open, close }] = useDisclosure(false);
     const navigate = useNavigate();
 
