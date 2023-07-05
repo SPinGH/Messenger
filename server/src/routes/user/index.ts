@@ -12,6 +12,8 @@ import {
     updateUserSchema,
     changePasswordSchema,
 } from './schemas/index.js';
+import { activeUsers } from '../socket/index.js';
+import { socketMessage } from '../socket/lib/socketMessage.js';
 
 const user: FastifyPluginAsyncJsonSchemaToTs = async (fastify) => {
     const groupCollection = fastify.mongo.db!.collection<Group>('group');
@@ -99,21 +101,31 @@ const user: FastifyPluginAsyncJsonSchemaToTs = async (fastify) => {
 
     fastify.put('/', { schema: updateUserSchema, onRequest: [fastify.authenticate] }, async (request, reply) => {
         const { username } = request.body;
+        const _id = new fastify.mongo.ObjectId(request.user.id);
 
         if (await userCollection.findOne({ username })) {
             reply.code(400);
             throw new Error('User with this username already exists');
         }
 
-        const { matchedCount } = await userCollection.updateOne(
-            { _id: new fastify.mongo.ObjectId(request.user.id) },
-            { $set: { username } }
-        );
+        const { matchedCount } = await userCollection.updateOne({ _id }, { $set: { username } });
 
         if (matchedCount === 0) {
             reply.code(404);
             throw new Error('User not found');
         }
+
+        const userIds = Array.from(
+            (await groupCollection.find({ users: _id }).toArray()).reduce((acc, group) => {
+                group.users.forEach((user) => acc.add(user.toHexString()));
+                return acc;
+            }, new Set() as Set<string>)
+        );
+        userIds.forEach((userId) => {
+            if (userId !== request.user.id) {
+                activeUsers.get(userId)?.send(socketMessage('updateUser', { _id, username }));
+            }
+        });
 
         return { message: 'User successfully updated' };
     });

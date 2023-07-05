@@ -1,12 +1,22 @@
 import { Message } from '../../group/model/message.js';
+import { Group } from '../../group/model/group.js';
+import { User } from '../../user/model/user.js';
 
 interface SocketMessageMap {
+    error: { message: string };
     auth: { token: string };
+
     online: { _id: string };
     offline: { _id: string; lastSeen: string };
+
     sendMessage: { group: string; text: string };
     recieveMessage: WithId<Message>;
-    error: { message: string };
+
+    createGroup: WithId<Group>;
+    updateGroup: WithId<Partial<Group>>;
+    deleteGroup: { _id: string };
+
+    updateUser: WithId<Partial<User>>;
 }
 
 type SocketMessage = {
