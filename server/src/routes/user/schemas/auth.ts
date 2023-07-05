@@ -1,4 +1,5 @@
 export const authSchema = {
+    tags: ['Auth'],
     body: {
         type: 'object',
         properties: {
@@ -6,7 +7,7 @@ export const authSchema = {
             password: { type: 'string' },
         },
         required: ['username', 'password'],
-    },
+    } as const,
     response: {
         200: {
             type: 'object',
@@ -14,6 +15,6 @@ export const authSchema = {
                 token: { type: 'string' },
             },
             required: ['token'],
-        },
+        } as const,
     },
-} as const;
+};

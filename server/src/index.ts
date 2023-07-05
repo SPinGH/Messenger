@@ -7,9 +7,9 @@ import env from './plugins/env.js';
 import socket from './plugins/socket.js';
 import cors from './plugins/cors.js';
 
-import userModule from './user/index.js';
-import socketModule from './socket/index.js';
-import groupModule from './group/index.js';
+import userModule from './routes/user/index.js';
+import socketModule from './routes/socket/index.js';
+import groupModule from './routes/group/index.js';
 
 const fastify = Fastify({
     logger: true,
@@ -24,9 +24,9 @@ fastify.register(swagger);
 
 fastify.register(
     async (instance) => {
-        instance.register(userModule);
-        instance.register(groupModule);
-        instance.register(socketModule);
+        instance.register(userModule, { prefix: '/user' });
+        instance.register(groupModule, { prefix: '/group' });
+        instance.register(socketModule, { prefix: '/socket' });
     },
     { prefix: '/api' }
 );

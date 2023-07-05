@@ -1,10 +1,12 @@
-import { Message } from '../../group/schemas/message.js';
+import { Message } from '../../group/model/message.js';
 
 interface SocketMessageMap {
-    auth: string;
+    auth: { token: string };
+    online: { _id: string };
+    offline: { _id: string; lastSeen: string };
     sendMessage: { group: string; text: string };
     recieveMessage: WithId<Message>;
-    error: string;
+    error: { message: string };
 }
 
 type SocketMessage = {

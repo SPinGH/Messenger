@@ -1,5 +1,6 @@
 export const createGroupSchema = {
     security: [{ Bearer: [] }],
+    tags: ['Group'],
     body: {
         type: 'object',
         properties: {
@@ -16,6 +17,6 @@ export const createGroupSchema = {
                 _id: { type: 'string' },
             },
             required: ['_id'],
-        },
+        } as const,
     },
 };

@@ -1,17 +1,16 @@
-import { messageScheme } from './message.js';
+import { userScheme } from '../model/user.js';
 
-export const getGroupMessagesSchema = {
+export const getUserByIdSchema = {
     security: [{ Bearer: [] }],
+    tags: ['User'],
     params: {
         type: 'object',
         properties: {
             id: { type: 'string' },
         },
+        required: ['id'],
     } as const,
     response: {
-        200: {
-            type: 'array',
-            items: messageScheme,
-        },
+        200: userScheme,
     },
 };

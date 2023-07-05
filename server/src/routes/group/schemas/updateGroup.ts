@@ -1,12 +1,18 @@
-export const changePasswordSchema = {
+export const updateGroupSchema = {
     security: [{ Bearer: [] }],
+    tags: ['Group'],
     body: {
         type: 'object',
         properties: {
-            oldPassword: { type: 'string' },
-            newPassword: { type: 'string' },
+            name: { type: 'string' },
+            users: { type: 'array', items: { type: 'string' } },
         },
-        required: ['oldPassword', 'newPassword'],
+    } as const,
+    params: {
+        type: 'object',
+        properties: {
+            id: { type: 'string' },
+        },
     } as const,
     response: {
         200: {

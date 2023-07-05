@@ -17,6 +17,7 @@ export type Message = Pick<
     FromSchema<typeof messageScheme>,
     Exclude<keyof typeof messageScheme.properties, '_id' | 'author' | 'group'>
 > & {
+    _id?: ObjectId;
     author: ObjectId;
     group: ObjectId;
 };

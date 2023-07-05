@@ -1,5 +1,6 @@
 export const updateUserSchema = {
     security: [{ Bearer: [] }],
+    tags: ['User'],
     body: {
         type: 'object',
         properties: {

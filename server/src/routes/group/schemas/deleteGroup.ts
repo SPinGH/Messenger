@@ -1,5 +1,6 @@
 export const deleteGroupSchema = {
     security: [{ Bearer: [] }],
+    tags: ['Group'],
     params: {
         type: 'object',
         properties: {

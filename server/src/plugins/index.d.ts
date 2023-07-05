@@ -3,6 +3,7 @@ import 'fastify';
 import { RouteHandlerMethod } from 'fastify';
 import { ENVType } from './env.ts';
 import { User } from '../user/schemas/user.ts';
+import { authenticateFunc } from './authenticate.ts';
 
 declare module '@fastify/jwt' {
     interface FastifyJWT {
@@ -13,7 +14,7 @@ declare module '@fastify/jwt' {
 
 declare module 'fastify' {
     interface FastifyInstance {
-        authenticate: RouteHandlerMethod;
+        authenticate: T & RouteHandlerMethod;
         config: ENVType;
     }
 }
