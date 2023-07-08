@@ -1,13 +1,12 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError, createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { clearToken } from '.';
+import { TokenStorage } from './token';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL + '/api',
-    prepareHeaders: (headers, api) => {
-        const state = api.getState() as RootState;
-
-        if (state.token.accessToken) {
-            headers.set('Authorization', `Bearer ${state.token.accessToken}`);
+    prepareHeaders: (headers) => {
+        const token = TokenStorage.get();
+        if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
         }
 
         return headers;
@@ -21,7 +20,9 @@ const baseQueryWithClearToken: BaseQueryFn<string | FetchArgs, unknown, FetchBas
 ) => {
     const result = await baseQuery(args, api, extraOptions);
 
-    if (result.error && result.error.status === 401) api.dispatch(clearToken());
+    if (result.error && result.error.status === 401) {
+        TokenStorage.clear();
+    }
 
     return result;
 };

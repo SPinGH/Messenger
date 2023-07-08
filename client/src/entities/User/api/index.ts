@@ -1,14 +1,12 @@
-import { Token, commonApi } from '@/shared/api';
+import { TokenStorage, commonApi } from '@/shared/api';
 
-import { Auth, ChangePassword, RawUserInfo, User, UserInfo } from '../model';
+import { Auth, ChangePassword, RawUserInfo, Token, User, UserInfo } from '../model';
 
 export const userApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
         getUserInfo: builder.query<UserInfo | null, void>({
-            queryFn: async (_arg, api, _extraOptions, baseQuery) => {
-                const state = api.getState() as RootState;
-
-                if (!state.token.accessToken) return { data: null };
+            queryFn: async (_arg, _api, _extraOptions, baseQuery) => {
+                if (!TokenStorage.get()) return { data: null };
 
                 const result = await baseQuery('/user');
                 if (result.error) return { error: result.error };

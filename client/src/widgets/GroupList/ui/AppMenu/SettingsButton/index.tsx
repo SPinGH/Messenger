@@ -5,6 +5,7 @@ import { FC } from 'react';
 
 import UsernameForm from './UsernameForm';
 import ChangePasswordForm from './ChangePasswordForm';
+import LogOutButton from './LogOutButton';
 
 const SettingsButton: FC = () => {
     const [opened, { open, close }] = useDisclosure(false);
@@ -17,6 +18,7 @@ const SettingsButton: FC = () => {
                 <Stack>
                     <UsernameForm />
                     <ChangePasswordForm />
+                    <LogOutButton />
                 </Stack>
             </Modal>
         </>

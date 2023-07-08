@@ -2,29 +2,17 @@ import { commonApi } from '@/shared/api';
 import { Group, GroupRequest, Message, MessageRequest } from '..';
 import { parseSocketMessage, socketMessage } from '../lib/socketMessage';
 import { userApi } from '@/entities/User';
-
-let socket: WebSocket;
-
-const getSocket = () => {
-    if (!socket) {
-        socket = new WebSocket(`${import.meta.env.VITE_API_WS_URL}/api/socket`);
-    }
-    return socket;
-};
+import { getSocket } from '../lib/socket';
 
 export const groupApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
         getGroups: builder.query<Group[], void>({
             query: () => '/group',
-            async onCacheEntryAdded(_, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, getState, dispatch }) {
+            async onCacheEntryAdded(_, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }) {
                 const ws = getSocket();
 
                 try {
                     await cacheDataLoaded;
-
-                    const state = getState() as RootState;
-
-                    ws.send(socketMessage('auth', { token: `Bearer ${state.token.accessToken}` }));
 
                     ws.onmessage = (event: MessageEvent) => {
                         const { type, data } = parseSocketMessage(event.data);
@@ -117,7 +105,7 @@ export const groupApi = commonApi.injectEndpoints({
                     // TODO
                 }
                 await cacheEntryRemoved;
-                ws.close();
+                ws.close(1000);
             },
         }),
 

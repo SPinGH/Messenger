@@ -2,15 +2,13 @@ import { Alert, Box, Button, Collapse, Flex, Paper, PasswordInput, TextInput } f
 import { useForm, matchesField, hasLength } from '@mantine/form';
 import { FC } from 'react';
 
-import { getErrorMessage, useAppDispatch } from '@/shared/lib';
+import { getErrorMessage } from '@/shared/lib';
 import { userApi } from '@/entities/User';
-import { setToken } from '@/shared/api';
+import { TokenStorage } from '@/shared/api';
 
 const SignUp: FC = () => {
     const [signIn, { isLoading, error }] = userApi.useSignUpMutation();
     const { refetch } = userApi.useGetUserInfoQuery();
-
-    const dispatch = useAppDispatch();
 
     const form = useForm({
         initialValues: {
@@ -27,8 +25,8 @@ const SignUp: FC = () => {
     const onSubmit: Parameters<(typeof form)['onSubmit']>[0] = (values) => {
         signIn(values)
             .unwrap()
-            .then((token) => {
-                dispatch(setToken(token));
+            .then((data) => {
+                TokenStorage.set(data.token);
                 refetch();
             });
     };
