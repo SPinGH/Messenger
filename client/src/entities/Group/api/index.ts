@@ -34,6 +34,13 @@ export const groupApi = commonApi.injectEndpoints({
                                         draft.push(data);
                                     })
                                 );
+                                dispatch(
+                                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                                        if (draft) {
+                                            draft.newMessages[data.group] = (draft.newMessages[data.group] ?? 0) + 1;
+                                        }
+                                    })
+                                );
                                 break;
                             }
                             case 'online': {
@@ -118,6 +125,23 @@ export const groupApi = commonApi.injectEndpoints({
                 const socket = getSocket();
                 return new Promise((resolve) => {
                     socket.send(socketMessage('sendMessage', data));
+                    resolve({ data: undefined });
+                });
+            },
+        }),
+
+        viewMessages: builder.mutation<void, Group['_id']>({
+            queryFn: (id, api) => {
+                const socket = getSocket();
+                api.dispatch(
+                    userApi.util.updateQueryData('getUserInfo', undefined, (draft) => {
+                        if (draft) {
+                            draft.newMessages[id] = 0;
+                        }
+                    })
+                );
+                return new Promise((resolve) => {
+                    socket.send(socketMessage('viewMessages', { group: id }));
                     resolve({ data: undefined });
                 });
             },

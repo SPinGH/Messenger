@@ -9,14 +9,10 @@ export interface User {
     lastSeen: string;
 }
 
-export interface RawUserInfo {
-    user: User;
-    users: User[];
-}
-
 export interface UserInfo {
     user: User;
     users: Record<string, User>;
+    newMessages: Record<string, number>;
 }
 
 export interface Auth {

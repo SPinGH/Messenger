@@ -1,6 +1,6 @@
 import { TokenStorage, commonApi } from '@/shared/api';
 
-import { Auth, ChangePassword, RawUserInfo, Token, User, UserInfo } from '../model';
+import { Auth, ChangePassword, Token, User, UserInfo } from '../model';
 
 export const userApi = commonApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -11,16 +11,7 @@ export const userApi = commonApi.injectEndpoints({
                 const result = await baseQuery('/user');
                 if (result.error) return { error: result.error };
 
-                const resultData = result.data as RawUserInfo;
-                const data = {
-                    user: resultData.user,
-                    users: resultData.users.reduce((acc, user) => {
-                        acc[user._id] = user;
-                        return acc;
-                    }, {} as UserInfo['users']),
-                };
-
-                return { data };
+                return { data: result.data as UserInfo };
             },
         }),
 

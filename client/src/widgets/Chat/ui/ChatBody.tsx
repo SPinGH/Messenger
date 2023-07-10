@@ -1,5 +1,5 @@
 import { Avatar, Flex, Paper, useMantineColorScheme } from '@mantine/core';
-import { FC, memo } from 'react';
+import { FC, memo, useEffect, useRef } from 'react';
 
 import { Group, groupApi } from '@/entities/Group';
 import { userApi } from '@/entities/User';
@@ -14,14 +14,21 @@ interface ChatBodyProps {
 const ChatBody: FC<ChatBodyProps> = memo(({ groupId, bg }) => {
     const { data: userInfo } = userApi.useGetUserInfoQuery();
     const { data: messages } = groupApi.useGetMessagesQuery(groupId);
+    const viewMessages = groupApi.useViewMessagesMutation()[0];
+    const rootRef = useRef<HTMLDivElement>(null);
 
     const { colorScheme } = useMantineColorScheme();
     const isDarkTheme = colorScheme === 'dark';
     const authorMessageColor = isDarkTheme ? 'blue.9' : 'blue.2';
     const userMessageColor = isDarkTheme ? 'gray.9' : 'gray.3';
 
+    useEffect(() => {
+        viewMessages(groupId);
+        rootRef.current?.scrollTo(0, rootRef.current.scrollHeight);
+    }, [messages, viewMessages, groupId]);
+
     return (
-        <Flex className={styles.messages} direction='column' h='100%' gap='xs' py='xs' px='md' bg={bg}>
+        <Flex ref={rootRef} className={styles.messages} direction='column' h='100%' gap='xs' py='xs' px='md' bg={bg}>
             {messages?.map((message) => (
                 <Flex key={message._id} gap='xs'>
                     <Avatar radius='xl'>{userInfo?.users[message.author]?.username[0].toUpperCase()}</Avatar>
