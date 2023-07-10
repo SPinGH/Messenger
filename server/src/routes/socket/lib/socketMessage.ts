@@ -10,6 +10,7 @@ interface SocketMessageMap {
     offline: { _id: string; lastSeen: string };
 
     sendMessage: { group: string; text: string };
+    viewMessages: { group: string };
     recieveMessage: WithId<Message>;
 
     createGroup: WithId<Group>;

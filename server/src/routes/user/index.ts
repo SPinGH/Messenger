@@ -37,6 +37,7 @@ const user: FastifyPluginAsyncJsonSchemaToTs = async (fastify) => {
             password: hashedPassword,
             isOnline: false,
             lastSeen: new Date().toISOString(),
+            newMessages: {},
         });
         const token = fastify.jwt.sign({ id: user.insertedId.toHexString() });
 
@@ -94,9 +95,12 @@ const user: FastifyPluginAsyncJsonSchemaToTs = async (fastify) => {
             }, new Set() as Set<string>)
         ).map((user) => new fastify.mongo.ObjectId(user));
 
-        const users = await userCollection.find({ _id: { $in: userIds } }).toArray();
+        const users = (await userCollection.find({ _id: { $in: userIds } }).toArray()).reduce((acc, user) => {
+            acc[user._id.toHexString()] = user;
+            return acc;
+        }, {} as Record<string, WithId<User>>);
 
-        return { user, users } as any;
+        return { user, users, newMessages: user.newMessages } as any;
     });
 
     fastify.put('/', { schema: updateUserSchema, onRequest: [fastify.authenticate] }, async (request, reply) => {

@@ -16,4 +16,5 @@ export type User = Pick<FromSchema<typeof userScheme>, Exclude<keyof typeof user
     _id?: ObjectId;
     salt: string;
     password: string;
+    newMessages: Record<string, number>;
 };

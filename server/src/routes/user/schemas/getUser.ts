@@ -9,11 +9,15 @@ export const getUserSchema = {
             properties: {
                 user: userScheme,
                 users: {
-                    type: 'array',
-                    items: userScheme,
+                    type: 'object',
+                    additionalProperties: userScheme,
+                },
+                newMessages: {
+                    type: 'object',
+                    additionalProperties: { type: 'integer' },
                 },
             },
-            required: ['user', 'users'],
+            required: ['user', 'users', 'newMessages'],
         } as const,
     },
 };

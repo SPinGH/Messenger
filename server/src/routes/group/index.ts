@@ -3,6 +3,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { socketMessage } from '../socket/lib/socketMessage.js';
 import { Group, GroupResponse } from './model/group.js';
 import { activeUsers } from '../socket/index.js';
+import { User } from '../user/model/user.js';
 import { Message } from './model/message.js';
 import {
     getGroupSchema,
@@ -13,6 +14,7 @@ import {
 } from './schemas/index.js';
 
 const group: FastifyPluginAsyncJsonSchemaToTs = async (fastify, opts) => {
+    const userCollection = fastify.mongo.db!.collection<User>('user');
     const groupCollection = fastify.mongo.db!.collection<Group>('group');
     const messageCollection = fastify.mongo.db!.collection<Message>('message');
 
@@ -81,28 +83,22 @@ const group: FastifyPluginAsyncJsonSchemaToTs = async (fastify, opts) => {
 
         await groupCollection.updateOne({ _id: group._id }, { $set: newGroup });
 
-        // const allUsers = group.users.reduce((acc, userId) => {
-        //     acc.add(userId.toHexString());
-        //     return acc;
-        // }, new Set(users));
-
-        // allUsers.forEach((userId) => {
-        //     if (userId !== request.user.id) {
-        //         activeUsers.get(userId)?.send(socketMessage('updateGroup', { _id: group._id, ...newGroup }));
-        //     }
-        // });
-        console.log(group.users, users);
-
         const newUsers = new Set(users);
-        group.users.forEach((userId) => {
+        for await (const userId of group.users) {
             const _id = userId.toHexString();
             if (users && !newUsers.has(_id)) {
                 activeUsers.get(_id)?.send(socketMessage('deleteGroup', { _id: group._id.toHexString() }));
+                await userCollection.updateOne(
+                    { _id: userId },
+                    {
+                        $unset: { [`newMessages.${group._id}`]: 1 },
+                    }
+                );
             } else if (_id !== request.user.id) {
                 activeUsers.get(_id)?.send(socketMessage('updateGroup', { _id: group._id, ...newGroup }));
             }
             newUsers.delete(_id);
-        });
+        }
         if (newUsers.size !== 0) {
             let lastMessage = group.lastMessage && (await messageCollection.findOne({ _id: group.lastMessage }));
             newUsers.forEach((userId) => {
@@ -128,13 +124,19 @@ const group: FastifyPluginAsyncJsonSchemaToTs = async (fastify, opts) => {
         await groupCollection.deleteOne({ _id });
         await messageCollection.deleteMany({ group: _id });
 
-        group.users.forEach((userId) => {
+        for await (const userId of group.users) {
             if (userId.toHexString() !== request.user.id) {
                 activeUsers
                     .get(userId.toHexString())
                     ?.send(socketMessage('deleteGroup', { _id: group._id.toHexString() }));
+                await userCollection.updateOne(
+                    { _id: userId },
+                    {
+                        $unset: { [`newMessages.${group._id}`]: 1 },
+                    }
+                );
             }
-        });
+        }
 
         return { message: 'Group successfully updated' };
     });

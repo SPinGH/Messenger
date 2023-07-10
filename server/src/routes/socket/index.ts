@@ -60,9 +60,7 @@ const socket: FastifyPluginAsyncJsonSchemaToTs = async (fastify, opts) => {
                         });
                     }
                 } catch (error) {
-                    console.log(error);
-
-                    connection.socket.send(socketMessage('error', { message: 'Not authenticated' }));
+                    connection.socket.send(socketMessage('error', { message: 'Not authenticate' }));
                 }
             } else if (currentUser !== null) {
                 switch (type) {
@@ -80,16 +78,33 @@ const socket: FastifyPluginAsyncJsonSchemaToTs = async (fastify, opts) => {
 
                             await groupCollection.updateOne({ _id: group._id }, { $set: { lastMessage: insertedId } });
 
-                            group.users.forEach((userId) =>
+                            group.users.forEach(async (userId) => {
                                 activeUsers.get(userId.toHexString())?.send(
                                     socketMessage('recieveMessage', {
                                         _id: insertedId,
                                         ...message,
                                     })
-                                )
-                            );
+                                );
+                                await userCollection.updateOne(
+                                    { _id: userId },
+                                    {
+                                        $inc: { [`newMessages.${group._id}`]: 1 },
+                                    }
+                                );
+                            });
                         }
 
+                        break;
+                    }
+                    case 'viewMessages': {
+                        await userCollection.updateOne(
+                            { _id: currentUser._id },
+                            {
+                                $set: {
+                                    [`newMessages.${data.group}`]: 0,
+                                },
+                            }
+                        );
                         break;
                     }
 
